@@ -465,25 +465,11 @@ def ParseNumber(number):
         return int(number)
 
 def main():
-    #Select the packets and formats to send
-    #Array format = [destination_host,destination_port,version,cipher_list,cipher_order,GREASE,RARE_APLN,1.3_SUPPORT,extension_orders]
-    tls1_2_forward = [destination_host, destination_port, "TLS_1.2", "ALL", "FORWARD", "NO_GREASE", "APLN", "1.2_SUPPORT", "REVERSE"]
-    tls1_2_reverse = [destination_host, destination_port, "TLS_1.2", "ALL", "REVERSE", "NO_GREASE", "APLN", "1.2_SUPPORT", "FORWARD"]
-    tls1_2_top_half = [destination_host, destination_port, "TLS_1.2", "ALL", "TOP_HALF", "NO_GREASE", "APLN", "NO_SUPPORT", "FORWARD"]
-    tls1_2_bottom_half = [destination_host, destination_port, "TLS_1.2", "ALL", "BOTTOM_HALF", "NO_GREASE", "RARE_APLN", "NO_SUPPORT", "FORWARD"]
-    tls1_2_middle_out = [destination_host, destination_port, "TLS_1.2", "ALL", "MIDDLE_OUT", "GREASE", "RARE_APLN", "NO_SUPPORT", "REVERSE"]
-    tls1_1_middle_out = [destination_host, destination_port, "TLS_1.1", "ALL", "FORWARD", "NO_GREASE", "APLN", "NO_SUPPORT", "FORWARD"]
     tls1_3_forward = [destination_host, destination_port, "TLS_1.3", "ALL", "FORWARD", "NO_GREASE", "APLN", "1.3_SUPPORT", "REVERSE"]
     tls1_3_reverse = [destination_host, destination_port, "TLS_1.3", "ALL", "REVERSE", "NO_GREASE", "APLN", "1.3_SUPPORT", "FORWARD"]
-    tls1_3_invalid = [destination_host, destination_port, "TLS_1.3", "NO1.3", "FORWARD", "NO_GREASE", "APLN", "1.3_SUPPORT", "FORWARD"]
-    tls1_3_middle_out = [destination_host, destination_port, "TLS_1.3", "ALL", "MIDDLE_OUT", "GREASE", "APLN", "1.3_SUPPORT", "REVERSE"]
-    #Possible versions: SSLv3, TLS_1, TLS_1.1, TLS_1.2, TLS_1.3
-    #Possible cipher lists: ALL, NO1.3
-    #GREASE: either NO_GREASE or GREASE
-    #APLN: either APLN or RARE_APLN
-    #Supported Verisons extension: 1.2_SUPPPORT, NO_SUPPORT, or 1.3_SUPPORT
-    #Possible Extension order: FORWARD, REVERSE
-    queue = [tls1_2_forward, tls1_2_reverse, tls1_2_top_half, tls1_2_bottom_half, tls1_2_middle_out, tls1_1_middle_out, tls1_3_forward, tls1_3_reverse, tls1_3_invalid, tls1_3_middle_out]
+
+    # OpenSSL Version Detection Change: Only Look for TLS 1.3 forward & reverse
+    queue = [tls1_3_forward, tls1_3_reverse]
     jarm = ""
     #Assemble, send, and decipher each packet
     iterate = 0
@@ -503,11 +489,16 @@ def main():
             jarm += ","
     #Fuzzy hash
     result = jarm_hash(jarm)
+    if "1302|0303||002b-0033" in jarm.split(',')[0] or "1303|0303||002b-0033" in jarm.split(',')[0]:
+        if "1302|0303||002b-0033" in jarm.split(',')[1] or "1303|0303||002b-0033" in jarm.split(',')[1]:
+            openssl = '3.x'
+    else:
+        openssl = 'Not 3.x'
     #Write to file
     if args.output:
         if ip != None:
             if args.json:
-                file.write('{"host":"' + destination_host + '","ip":"' + ip + '","result":"' + result + '"')
+                file.write('{"host":"' + destination_host + '","ip":"' + ip + '","result":"' + result + '", "openssl":"' + openssl + '"}')
             else:
                 file.write(destination_host + "," + ip + "," + result)
         else:
@@ -525,23 +516,21 @@ def main():
     else:
         if ip != None:
             if args.json:
-                sys.stdout.write('{"host":"' + destination_host + '","ip":"' + ip + '","result":"' + result + '"')
+                sys.stdout.write('{"host":"' + destination_host + '","ip":"' + ip + '","jarm":"' + result + '", "openssl":"' + openssl + '"}')
             else:
                 print("Domain: " + destination_host)
                 print("Resolved IP: " + ip)
+                print("Likely OpenSSL Version:", openssl)
                 print("JARM: " + result)
         else:
             if args.json:
-                sys.stdout.write('{"host":"' + destination_host + '","ip":null,"result":"' + result + '"')
+                sys.stdout.write('{"host":"' + destination_host + '","ip":null,"jarm":"' + result + '", "openssl":"' + openssl + '"}')
             else:
                 print("Domain: " + destination_host)
                 print("Resolved IP: IP failed to resolve.")
+                print("Likely OpenSSL Version:", openssl)
                 print("JARM: " + result)
-        #Verbose mode adds pre-fuzzy-hashed JARM
-        if args.verbose:
-            if args.json:
-                sys.stdout.write(',"jarm":"' + jarm + '"')
-            else:
+
                 scan_count = 1
                 for round in jarm.split(","):
                     print("Scan " + str(scan_count) + ": " + round, end="")
@@ -550,8 +539,6 @@ def main():
                     else:
                         print(",")
                     scan_count += 1
-        if args.json:
-            sys.stdout.write("}\n")
 
 
 #set proxy
