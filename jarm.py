@@ -516,7 +516,7 @@ def main():
     else:
         if ip != None:
             if args.json:
-                sys.stdout.write('{"host":"' + destination_host + '","ip":"' + ip + '","jarm":"' + result + '", "openssl":"' + openssl + '"}')
+                sys.stdout.write('{"host":"' + destination_host + '","ip":"' + ip + '","jarm":"' + result +  '", "vjarm":"' + jarm + '", "openssl":"' + openssl + '"}')
             else:
                 print("Domain: " + destination_host)
                 print("Resolved IP: " + ip)
@@ -524,7 +524,7 @@ def main():
                 print("JARM: " + result)
         else:
             if args.json:
-                sys.stdout.write('{"host":"' + destination_host + '","ip":null,"jarm":"' + result + '", "openssl":"' + openssl + '"}')
+                sys.stdout.write('{"host":"' + destination_host + '","ip":null,"jarm":"' + result + '", "vjarm":"' + jarm +  '", "openssl":"' + openssl + '"}')
             else:
                 print("Domain: " + destination_host)
                 print("Resolved IP: IP failed to resolve.")
