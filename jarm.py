@@ -489,9 +489,9 @@ def main():
             jarm += ","
     #Fuzzy hash
     result = jarm_hash(jarm)
-    if "1302|0303||002b-0033" in jarm.split(',')[0] or "1303|0303||002b-0033" in jarm.split(',')[0]:
-        if "1302|0303||002b-0033" in jarm.split(',')[1] or "1303|0303||002b-0033" in jarm.split(',')[1]:
-            openssl = '3.x'
+    openssl_3_jarms = ["1302|0303||002b-0033", "1303|0303||002b-0033", "1302|0303||0033-002b", "1303|0303||0033-002b"]
+    if jarm.split(',')[0] in openssl_3_jarms and jarm.split(',')[1] in openssl_3_jarms:
+        openssl = '3.x'
     else:
         openssl = 'Not 3.x'
     #Write to file
